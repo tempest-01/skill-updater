@@ -1,0 +1,10 @@
+{
+  "name": "skill-updater",
+  "version": "1.1.0",
+  "description": "Local-modification-preserving clawhub skill updater. Saves changes as diff patch, applies to new versions, reports conflicts clearly. No forced overwrites.",
+  "triggers": [
+    "skill更新",
+    "auto update",
+    "git sync"
+  ]
+}
