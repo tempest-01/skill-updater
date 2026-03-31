@@ -35,9 +35,11 @@ ORIGINALS_DIR = "originals"
 
 # ============ 工具函数 ============
 
-def run(cmd: list, cwd: str = SKILLS_DIR, timeout: int = 60) -> tuple[int, str, str]:
+def run(cmd: list, cwd: str = SKILLS_DIR, timeout: int = 60, input: str = "") -> tuple[int, str, str]:
     try:
-        r = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, timeout=timeout)
+        r = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True,
+                         timeout=timeout,
+                         input=input if input else None)
         return r.returncode, r.stdout, r.stderr
     except subprocess.TimeoutExpired:
         return -1, "", "timeout"

@@ -1,81 +1,84 @@
 ---
 name: skill-updater
-description: Local-modification-preserving clawhub skill updater. Saves modifications as a diff patch, fetches clawhub updates, applies patch to new version. Conflicts are reported with diff for manual decision.
+description: Local-modification-preserving clawhub skill updater. Saves changes as diff patch, applies to new versions, reports conflicts clearly. No forced overwrites.
 metadata:
   openclaw:
     requires:
-      bins: [python3, clawhub]
-      env: [OPENCLAW_SKILLS_DIR]
+      bins: [python3, clawhub, diff, patch]
+      env: [OPENCLAW_SKILLS_DIR]  # default: /root/.openclaw/workspace/skills
     triggers: [skill更新, auto update, git sync]
 ---
 
 # Skill-Updater
 
-> 本地修改保护式 clawhub skill 更新器。运行前请先阅读 Before Installing。
+> Local-modification-preserving clawhub skill updater.
 
-## 核心功能
+## What It Does
 
-**用户修改了某个 clawhub skill 的文件** → clawhub 发布了新版 → Skill-Updater 在保留用户修改的前提下更新到新版。
+You modified a clawhub-installed skill → clawhub released a new version → Skill-Updater updates while **preserving your local changes**.
 
-## 工作原理
+## How It Works
 
 ```
-Step 1: 保存修改
-  → 自动扫描 skill 目录，生成 unified diff patch
-  → 备份原始文件到 .skill-updater/originals/
+Step 1: Save modifications
+  → Scans skill directory, generates unified diff patch
+  → Backs up originals to .skill-updater/originals/
 
-Step 2: clawhub 更新
-  → clawhub update 下载新版文件
+Step 2: clawhub update
+  → clawhub update downloads new version files
 
-Step 3: 尝试合并
-  → patch --dry-run 试探将修改应用到新版
-  → 成功：直接写入新版 ✅
-  → 失败：展示 diff 冲突，用户手动决策
+Step 3: Try to merge
+  → patch --dry-run attempts to apply changes to new version
+  → Success: written with your changes preserved ✅
+  → Fail: show diff, user decides manually
 ```
 
-## 文件结构
+## File Structure
 
 ```
 skill-dir/
 ├── .skill-updater/
-│   ├── mod.patch      # 本地修改的 unified diff
-│   └── originals/      # 安装时的原始文件快照
-└── [skill 文件]
+│   ├── mod.patch       # unified diff of your changes
+│   └── originals/       # snapshot of original files at install time
+└── [skill files]
 ```
 
-## 用法
+## CLI
 
 ```bash
-# 预览：显示哪些 skill 有新版
+# Dry-run: preview which skills have updates and conflicts
 python3 git_update.py
 
-# 实际更新
+# Apply updates
 python3 git_update.py --apply
 
-# 仅更新指定 skill
+# Update specific skill
 python3 git_update.py --apply --skill <slug>
 
-# 查看已保存的本地修改
+# Show saved modifications
 python3 git_update.py --show-patch
 
-# 丢弃修改（接受新版，放弃本地修改）
+# Discard modifications (accept new version, drop your changes)
 python3 git_update.py --discard --skill <slug>
 ```
 
-## 冲突处理
+## Conflict Handling
 
-| 情况 | 结果 |
-|------|------|
-| patch 成功应用 | 新版 + 修改均保留 ✅ |
-| patch 失败（同行冲突） | 显示 diff，用户手动处理 |
-| 无本地修改 | 直接 clawhub update ✅ |
+| Situation | Result |
+|-----------|--------|
+| Patch applies cleanly | New version + your changes preserved ✅ |
+| Same area modified by both | Show diff, user decides |
+| No local modifications | Direct clawhub update ✅ |
+| Choose to discard | Delete patch, accept new version |
 
 ## Requirements
 
 - Python 3.8+
 - `clawhub` CLI
+- `diff` (coreutils)
+- `patch` (coreutils)
 
 ## Before Installing
 
-1. **Dry-run first** — 始终先用 `python3 git_update.py` 预览，不带 `--apply`
-2. **Backup** — 对重要 skill 的修改，建议在 --discard 前手动备份
+1. **Dry-run first** — Always run `python3 git_update.py` without `--apply` first to preview
+2. **Backup** — For important skills, manually back up your modifications before using `--discard`
